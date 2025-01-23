@@ -26,7 +26,7 @@ func PostFacultyBoardRequestHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&request); err != nil {
 		log.Printf("Error parsing request body: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
+			"error": "Invalid request body. Please check the data format.",
 		})
 	}
 
@@ -46,7 +46,14 @@ func PostFacultyBoardRequestHandler(c *fiber.Ctx) error {
 		request.FacultyID,
 	).Scan(&exists)
 
-	if err != nil || !exists {
+	if err != nil {
+		log.Printf("Error checking faculty ID %d existence: %v", request.FacultyID, err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Internal server error while verifying faculty ID",
+		})
+	}
+
+	if !exists {
 		log.Printf("Faculty ID %d does not exist", request.FacultyID)
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error": "Faculty ID does not exist",
@@ -87,19 +94,22 @@ func PostFacultyBoardRequestHandler(c *fiber.Ctx) error {
 
 func validateFacultyBoardRequest(req FacultyBoardRequest) error {
 	if req.FacultyID <= 0 {
-		return fiber.NewError(http.StatusBadRequest, "FacultyID must be a positive integer")
+		return fiber.NewError(http.StatusBadRequest, "Faculty ID must be a positive integer")
 	}
 	if req.PaperAllocated < 0 {
-		return fiber.NewError(http.StatusBadRequest, "PaperAllocated must be a non-negative integer")
+		return fiber.NewError(http.StatusBadRequest, "Paper allocated must be a non-negative integer")
 	}
-	if req.CourseID <= 0 {
-		return fiber.NewError(http.StatusBadRequest, "CourseID must be a positive integer")
+	if req.CourseID < 0 {
+		return fiber.NewError(http.StatusBadRequest, "Course ID must be a positive integer")
+	}
+	if req.DeptID < 0 {
+		return fiber.NewError(http.StatusBadRequest, "Department ID must be a positive integer")
 	}
 	if req.Deadline < 0 {
 		return fiber.NewError(http.StatusBadRequest, "Deadline must be a non-negative integer")
 	}
 	if req.BCEID == "" {
-		return fiber.NewError(http.StatusBadRequest, "BCEID cannot be empty")
+		return fiber.NewError(http.StatusBadRequest, "BCE ID cannot be empty")
 	}
 	return nil
 }
