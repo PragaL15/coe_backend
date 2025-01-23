@@ -17,6 +17,7 @@ type FacultyBoardRequest struct {
 	Deadline       int    `json:"deadline"`
 	Status         int    `json:"status"`
 	BCEID          string `json:"bce_id"`
+	SemCode        string `json:"sem_code"`
 }
 
 func PostFacultyBoardRequestHandler(c *fiber.Ctx) error {
@@ -63,9 +64,9 @@ func PostFacultyBoardRequestHandler(c *fiber.Ctx) error {
 	// Insert data into the faculty_all_records table.
 	query := `
     INSERT INTO faculty_all_records (
-        faculty_id, paper_allocated, course_id, dept_id, deadline, status, bce_id
+        faculty_id, paper_allocated, course_id, dept_id, deadline, status, bce_id,sem_code
     ) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    VALUES ($1, $2, $3, $4, $5, $6, $7,$8)
 `
 	_, err = config.DB.Exec(
 		context.Background(),
@@ -77,6 +78,7 @@ func PostFacultyBoardRequestHandler(c *fiber.Ctx) error {
 		request.Deadline,
 		request.Status,
 		request.BCEID,
+		request.SemCode,
 	)
 
 	if err != nil {
