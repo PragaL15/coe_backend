@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	"github.com/PragaL15/coe_backend/config"
-	"github.com/PragaL15/coe_backend/handlers"
+	"github.com/PragaL15/coe_backend/handlers/fac_request"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -42,7 +42,10 @@ func main() {
 	app.Get("/api/deptOption", handlers.GetDepartmentsHandler)
 	app.Get("/api/semOption", handlers.GetSemestersHandler)
 	app.Get("/api/academicOption", handlers.GetAcademicYearOptions)
+	app.Get("/api/FacultyGetApprove", handlers.GetFacultyRequestsHandler)
 	app.Post("/api/FacultyRequestSubmit", handlers.PostFacultyRequestHandler)
+	app.Post("/api/FacultyApproval", handlers.UpdateFacultyRequestHandler)
+
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
