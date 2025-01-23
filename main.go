@@ -41,6 +41,8 @@ func main() {
 	app.Get("/api/courseOption", handlers.GetCoursesHandler)
 	app.Get("/api/deptOption", handlers.GetDepartmentsHandler)
 	app.Get("/api/semOption", handlers.GetSemestersHandler)
+	app.Get("/api/academicOption", handlers.GetAcademicYearOptions)
+	app.Post("/api/FacultyRequestSubmit", handlers.PostFacultyRequestHandler)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

@@ -11,7 +11,6 @@ import (
 )
 
 type Faculty struct {
-	ID          int       `json:"id"`
 	FacultyID   int       `json:"faculty_id"`
 	FacultyName string    `json:"faculty_name"` // Non-pointer since faculty_name is NOT NULL
 	Dept        int       `json:"dept"`
@@ -22,7 +21,7 @@ type Faculty struct {
 }
 
 func GetFacultyHandler(c *fiber.Ctx) error {
-	query := `SELECT id, faculty_id, faculty_name, dept, status, createdat, updatedat, mobile_num FROM faculty_table`
+	query := `SELECT faculty_id, faculty_name, dept, status, createdat, updatedat, mobile_num FROM faculty_table`
 	rows, err := config.DB.Query(context.Background(), query)
 	if err != nil {
 		log.Printf("Error querying faculty data: %v", err)
@@ -36,7 +35,6 @@ func GetFacultyHandler(c *fiber.Ctx) error {
 	for rows.Next() {
 		var faculty Faculty
 		if err := rows.Scan(
-			&faculty.ID,
 			&faculty.FacultyID,
 			&faculty.FacultyName,
 			&faculty.Dept,
