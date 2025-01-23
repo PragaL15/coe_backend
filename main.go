@@ -42,11 +42,12 @@ func main() {
 	app.Get("/api/deptOption", handlers.GetDepartmentsHandler)
 	app.Get("/api/semOption", handlers.GetSemestersHandler)
 	app.Get("/api/academicOption", handlers.GetAcademicYearOptions)
+	app.Get("/api/bceOption", handlers.GetBceOptions)
 	app.Get("/api/FacultyGetApprove", handlers.GetFacultyRequestsHandler)
 	app.Post("/api/FacultyRequestSubmit", handlers.PostFacultyRequestHandler)
 	app.Post("/api/FacultyApproval", handlers.UpdateFacultyRequestHandler)
-
-
+	app.Post("/api/BoardApproval", handlers.PostFacultyBoardRequestHandler)
+ 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
