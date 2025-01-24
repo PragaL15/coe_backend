@@ -44,6 +44,7 @@ func main() {
 	app.Get("/api/academicOption", handlers.GetAcademicYearOptions)
 	app.Get("/api/bceOption", handlers.GetBceOptions)
 	app.Get("/api/FacultyGetApprove", handlers.GetFacultyRequestsHandler)
+	app.Get("/api/FacultyRecordsDisplay", handlers.GetAllFacultyRecordsHandler)
 	app.Post("/api/FacultyRequestSubmit", handlers.PostFacultyRequestHandler)
 	app.Post("/api/FacultyApproval", handlers.UpdateFacultyRequestHandler)
 	app.Post("/api/BoardApproval", handlers.PostFacultyBoardRequestHandler)
