@@ -7,10 +7,11 @@ import (
 	"syscall"
 
 	"github.com/PragaL15/coe_backend/config"
+	Adminhandlers "github.com/PragaL15/coe_backend/handlers/admin"
 	"github.com/PragaL15/coe_backend/handlers/fac_request"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 )
 
@@ -48,6 +49,11 @@ func main() {
 	app.Post("/api/FacultyRequestSubmit", handlers.PostFacultyRequestHandler)
 	app.Post("/api/FacultyApproval", handlers.UpdateFacultyRequestHandler)
 	app.Post("/api/BoardApproval", handlers.PostFacultyBoardRequestHandler)
+	app.Post("/api/BceData", Adminhandlers.PostBceOptions)
+	app.Post("/api/CourseSend", Adminhandlers.PostCourseHandler)
+	app.Post("/api/FacultyData", Adminhandlers.PostFacultyHandler)
+	app.Post("/api/DeptData", Adminhandlers.PostDeptHandler)
+	app.Post("/api/SemesterData", Adminhandlers.PostSemesterHandler)
  
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
