@@ -11,11 +11,12 @@ import (
 )
 
 type Faculty struct {
-	FacultyID   int    `json:"faculty_id"`
+	FacultyID   int    `json:"faculty_id,omitempty"` // Don't include faculty_id in the input (it will be generated automatically)
 	FacultyName string `json:"faculty_name"`
 	Dept        int    `json:"dept"`
-	Status      int    `json:"status,omitempty"`   
-	MobileNum   string `json:"mobile_num"`          
+	Status      int    `json:"status,omitempty"`
+	MobileNum   string `json:"mobile_num"`
+	Email       string `json:"email"`
 }
 
 func PostFacultyHandler(c *fiber.Ctx) error {
@@ -27,23 +28,28 @@ func PostFacultyHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	if faculty.FacultyID <= 0 || faculty.FacultyName == "" || faculty.Dept <= 0 || faculty.MobileNum == "" {
+	// Validate required fields
+	if faculty.FacultyName == "" || faculty.Dept <= 0 || faculty.MobileNum == "" {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid input data. 'faculty_id', 'faculty_name', 'dept', and 'mobile_num' are required.",
+			"error": "Invalid input data. 'faculty_name', 'dept', and 'mobile_num' are required.",
 		})
 	}
 
+	// Validate mobile number length
 	if len(faculty.MobileNum) > 15 {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Mobile number exceeds the maximum length of 15 characters.",
 		})
 	}
+
+	// Default status to 1 if it's not provided
 	if faculty.Status == 0 {
 		faculty.Status = 1
 	}
 
+	// Insert the faculty record into the database
 	query := `
-		INSERT INTO faculty_table (faculty_id, faculty_name, dept, status, createdat, updatedat, mobile_num)
+		INSERT INTO faculty_table (faculty_name, dept, status, createdat, updatedat, mobile_num, email)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING faculty_id
 	`
@@ -52,13 +58,13 @@ func PostFacultyHandler(c *fiber.Ctx) error {
 	err := config.DB.QueryRow(
 		context.Background(),
 		query,
-		faculty.FacultyID,
 		faculty.FacultyName,
 		faculty.Dept,
 		faculty.Status,
 		now,
 		now,
 		faculty.MobileNum,
+		faculty.Email,
 	).Scan(&insertedFacultyID)
 
 	if err != nil {
@@ -69,7 +75,7 @@ func PostFacultyHandler(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
-		"message": "Faculty record created successfully",
+		"message":    "Faculty record created successfully",
 		"faculty_id": insertedFacultyID,
 	})
 }
