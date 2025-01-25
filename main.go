@@ -54,6 +54,7 @@ func main() {
 	app.Post("/api/FacultyData", Adminhandlers.PostFacultyHandler)
 	app.Post("/api/DeptData", Adminhandlers.PostDeptHandler)
 	app.Post("/api/SemesterData", Adminhandlers.PostSemesterHandler)
+	app.Post("/api/AcademicYearHandler", Adminhandlers.PostAcademicYearHandler)
  
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

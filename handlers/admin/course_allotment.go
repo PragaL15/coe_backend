@@ -11,14 +11,16 @@ import (
 )
 
 type Course struct {
-	CourseID   int    `json:"course_id"`
-	CourseCode string `json:"course_code"`
-	CourseName string `json:"course_name"`
+	CourseCode string `json:"course_code"` // Required field
+	CourseName string `json:"course_name"` // Required field
 	Status     int    `json:"status,omitempty"`
+	SemCode    string `json:"sem_code"` // Required field
 }
 
 func PostCourseHandler(c *fiber.Ctx) error {
 	var course Course
+
+	// Parse request body into the `Course` struct
 	if err := c.BodyParser(&course); err != nil {
 		log.Printf("Error parsing request body: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -26,36 +28,56 @@ func PostCourseHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	if course.CourseID <= 0 || course.CourseCode == "" || course.CourseName == "" {
+	// Input validation
+	if course.CourseCode == "" || course.CourseName == "" || course.SemCode == "" {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid input data. 'course_id', 'course_code', and 'course_name' are required.",
+			"error": "'course_code', 'course_name', and 'sem_code' are required fields.",
 		})
 	}
 
+	// Set default status if not provided
 	if course.Status == 0 {
 		course.Status = 1
 	}
 
-	query := `
-		INSERT INTO course_table (course_id, course_code, course_name, status, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id
-	`
-
-	now := time.Now()
-
-	var insertedID int
+	// Check if the `sem_code` exists in `semester_table`
+	var exists bool
 	err := config.DB.QueryRow(
 		context.Background(),
-		query,
-		course.CourseID,
-		course.CourseCode,
-		course.CourseName,
-		course.Status,
-		now,
-		now,
-	).Scan(&insertedID)
+		"SELECT EXISTS(SELECT 1 FROM semester_table WHERE sem_code=$1)",
+		course.SemCode,
+	).Scan(&exists)
+	if err != nil {
+		log.Printf("Error checking 'sem_code' existence: %v", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to validate 'sem_code'. Please try again.",
+		})
+	}
 
+	if !exists {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid 'sem_code'. Please provide a valid semester code.",
+		})
+	}
+
+	// Prepare the SQL query for inserting the course
+	query := `
+		INSERT INTO course_table (course_code, course_name, status, sem_code, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`
+	now := time.Now()
+
+	// Execute the query
+	_, err = config.DB.Exec(
+		context.Background(),
+		query,
+		course.CourseCode,  // course_code
+		course.CourseName,  // course_name
+		course.Status,      // status
+		course.SemCode,     // sem_code
+		now,                // createdat
+		now,                // updatedat
+	)
 	if err != nil {
 		log.Printf("Error inserting course record: %v", err)
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
@@ -63,8 +85,8 @@ func PostCourseHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	// Respond with success
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "Course record created successfully",
-		"id":      insertedID,
 	})
 }
