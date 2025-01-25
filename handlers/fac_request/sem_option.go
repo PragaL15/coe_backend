@@ -10,20 +10,17 @@ import (
 	"github.com/PragaL15/coe_backend/config"
 )
 
-// Semester struct represents the data structure of a semester
 type Semester struct {
 	ID              int       `json:"id"`
 	SemCode         string    `json:"sem_code"`
 	SemAcademicYear string    `json:"sem_academic_year"`
-	Year            int       `json:"year"`
 	Status          int       `json:"status"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
 
-// GetSemestersHandler retrieves all semesters from the semester_table
 func GetSemestersHandler(c *fiber.Ctx) error {
-	query := `SELECT id, sem_code, sem_academic_year, year, status, createdat, updatedat FROM semester_table`
+	query := `SELECT id, sem_code, sem_academic_year, status, createdat, updatedat FROM semester_table`
 	rows, err := config.DB.Query(context.Background(), query)
 	if err != nil {
 		log.Printf("Error querying semester data: %v", err)
@@ -40,7 +37,6 @@ func GetSemestersHandler(c *fiber.Ctx) error {
 			&semester.ID,
 			&semester.SemCode,
 			&semester.SemAcademicYear,
-			&semester.Year,
 			&semester.Status,
 			&semester.CreatedAt,
 			&semester.UpdatedAt,
@@ -52,6 +48,5 @@ func GetSemestersHandler(c *fiber.Ctx) error {
 		}
 		semesters = append(semesters, semester)
 	}
-
 	return c.Status(http.StatusOK).JSON(semesters)
 }

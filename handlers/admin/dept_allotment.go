@@ -11,7 +11,6 @@ import (
 )
 
 type Department struct {
-	DeptID   int    `json:"id"`
 	DeptName string `json:"dept_name"`
 	Status   int    `json:"status,omitempty"` 
 }
@@ -35,8 +34,8 @@ func PostDeptHandler(c *fiber.Ctx) error {
 	}
 
 	query := `
-		INSERT INTO dept_table (id, dept_name, status, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO dept_table ( dept_name, status, createdat, updatedat)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id;
 	`
 
@@ -45,8 +44,7 @@ func PostDeptHandler(c *fiber.Ctx) error {
 	var insertedID int
 	err := config.DB.QueryRow(
 		context.Background(),
-		query,
-		dept.DeptID,   
+		query,  
 		dept.DeptName,    
 		dept.Status,      
 		now,             

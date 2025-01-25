@@ -22,6 +22,8 @@ type Department struct {
 // GetDepartmentsHandler retrieves all departments from the dept_table
 func GetDepartmentsHandler(c *fiber.Ctx) error {
 	query := `SELECT id, dept_name, status, createdat, updatedat FROM dept_table`
+
+	// Execute the query
 	rows, err := config.DB.Query(context.Background(), query)
 	if err != nil {
 		log.Printf("Error querying department data: %v", err)
@@ -31,7 +33,10 @@ func GetDepartmentsHandler(c *fiber.Ctx) error {
 	}
 	defer rows.Close()
 
-	var departments []Department
+	// Initialize an empty slice to hold department data
+	departments := make([]Department, 0)
+
+	// Iterate through the rows and populate the slice
 	for rows.Next() {
 		var dept Department
 		if err := rows.Scan(
@@ -50,5 +55,14 @@ func GetDepartmentsHandler(c *fiber.Ctx) error {
 		departments = append(departments, dept)
 	}
 
+	// Check for any errors encountered during iteration
+	if err := rows.Err(); err != nil {
+		log.Printf("Error iterating over rows: %v", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Error while processing department data",
+		})
+	}
+
+	// Return the list of departments
 	return c.Status(http.StatusOK).JSON(departments)
 }
