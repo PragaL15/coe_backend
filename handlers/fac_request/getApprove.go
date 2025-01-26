@@ -26,7 +26,6 @@ type FacultyGetRequest struct {
 	Reason          *string    `json:"reason"` // Pointer to handle nullable reason
 }
 
-// GetFacultyRequestsHandler retrieves all rows from the faculty_request table
 func GetFacultyRequestsHandler(c *fiber.Ctx) error {
 	// Query to fetch data
 	query := `

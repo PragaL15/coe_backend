@@ -11,7 +11,7 @@ import (
 
 type FacultyDailyUpdateRequest struct {
 	FacultyID          int    `json:"faculty_id"`
-	PaperID            string `json:"paper_id"`
+	PaperID            int    `json:"paper_id"`
 	PaperCorrectedToday int   `json:"paper_corrected_today"`
 	Remarks            string `json:"remarks"`
 }
@@ -19,7 +19,7 @@ type FacultyDailyUpdateRequest struct {
 func PostFacultyDailyUpdateHandler(c *fiber.Ctx) error {
 	var request FacultyDailyUpdateRequest
 
-	// Parse the request body into the FacultyDailyUpdateRequest struct.
+	// Parse the request body
 	if err := c.BodyParser(&request); err != nil {
 		log.Printf("Error parsing request body: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -27,7 +27,7 @@ func PostFacultyDailyUpdateHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate the request.
+	// Validate the request
 	if err := validateFacultyDailyUpdateRequest(request); err != nil {
 		log.Printf("Validation error: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -35,7 +35,10 @@ func PostFacultyDailyUpdateHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check if the faculty_id and paper_id exist in faculty_all_records table.
+	// Log the incoming data to verify
+	log.Printf("Checking existence of FacultyID %d and PaperID %d", request.FacultyID, request.PaperID)
+
+	// Check if the FacultyID and PaperID exist in the faculty_all_records table
 	var exists bool
 	err := config.DB.QueryRow(
 		context.Background(),
@@ -44,22 +47,28 @@ func PostFacultyDailyUpdateHandler(c *fiber.Ctx) error {
 		request.PaperID,
 	).Scan(&exists)
 
-	if err != nil || !exists {
-		log.Printf("Faculty ID %d and Paper ID %s do not exist", request.FacultyID, request.PaperID)
+	if err != nil {
+		log.Printf("Error executing query: %v", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database error while checking existence",
+		})
+	}
+
+	// If the record doesn't exist
+	if !exists {
+		log.Printf("Faculty ID %d and Paper ID %d do not exist", request.FacultyID, request.PaperID)
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error": "Faculty ID or Paper ID does not exist",
 		})
 	}
 
-	// Define the SQL query for inserting data into daily_faculty_updates table.
+	// Insert the daily update record into the database
 	query := `
     INSERT INTO daily_faculty_updates (
         faculty_id, paper_id, paper_corrected_today, remarks
     ) 
     VALUES ($1, $2, $3, $4)
 `
-
-	// Execute the query to insert the daily update into the database.
 	_, err = config.DB.Exec(
 		context.Background(),
 		query,
@@ -68,6 +77,7 @@ func PostFacultyDailyUpdateHandler(c *fiber.Ctx) error {
 		request.PaperCorrectedToday,
 		request.Remarks,
 	)
+
 	if err != nil {
 		log.Printf("Error inserting daily faculty update: %v", err)
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
@@ -75,18 +85,19 @@ func PostFacultyDailyUpdateHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Return a success response.
+	// Return success message
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "Faculty daily update created successfully",
 	})
 }
 
+// Validate the input request
 func validateFacultyDailyUpdateRequest(req FacultyDailyUpdateRequest) error {
 	if req.FacultyID <= 0 {
 		return fiber.NewError(http.StatusBadRequest, "FacultyID must be a positive integer")
 	}
-	if req.PaperID == "" {
-		return fiber.NewError(http.StatusBadRequest, "PaperID cannot be empty")
+	if req.PaperID <= 0 {
+		return fiber.NewError(http.StatusBadRequest, "PaperID must be a positive integer")
 	}
 	if req.PaperCorrectedToday < 0 {
 		return fiber.NewError(http.StatusBadRequest, "PaperCorrectedToday must be greater than or equal to 0")
