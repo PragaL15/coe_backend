@@ -93,4 +93,58 @@ CREATE TABLE academic_year_table (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- Auto set update time
 );
 ```
-8. 
+8. daily_faculty_updates - To track the daily upadtes status of allocated papers from each faculty. 
+
+```sql
+CREATE TABLE daily_faculty_updates (
+    update_id SERIAL PRIMARY KEY, -- auto-incremented primary key
+    faculty_id INT NOT NULL, -- faculty ID
+    paper_id TEXT NOT NULL, -- paper ID
+    paper_corrected_today INT CHECK (paper_corrected_today >= 0), -- corrected papers today, must be >= 0
+    remarks TEXT, -- remarks for the update
+    FOREIGN KEY (faculty_id, paper_id) REFERENCES faculty_all_records(faculty_id, paper_id), -- foreign key constraint
+    CONSTRAINT daily_faculty_updates_paper_corrected_today_check CHECK (paper_corrected_today >= 0) -- ensure non-negative values for paper_corrected_today
+);
+
+```
+---
+9. FacultyDailyUpdates -- To maintain the daily update from faculties
+
+```sql
+CREATE TABLE FacultyDailyUpdates (
+    id SERIAL PRIMARY KEY,
+    faculty_status_id INT NOT NULL,
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    papers_corrected INT NOT NULL,
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (faculty_status_id) REFERENCES FacultyPaperStatus(id) ON DELETE CASCADE
+);
+```
+
+10. Trigger function created to update the paper_corrected in the faculty_all_records table from the daily_faculty_updates table.
+
+```sql
+CREATE OR REPLACE FUNCTION update_paper_corrected()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Check if paper_corrected_today is greater than 0
+    IF NEW.paper_corrected_today > 0 THEN
+        -- Update the paper_corrected column in faculty_all_records
+        UPDATE faculty_all_records
+        SET paper_corrected = paper_corrected + NEW.paper_corrected_today
+        WHERE faculty_id = NEW.faculty_id AND paper_id = NEW.paper_id;
+    END IF;
+
+    -- Return the NEW record, necessary for INSERT triggers
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_paper_corrected
+BEFORE INSERT ON daily_faculty_updates
+FOR EACH ROW
+EXECUTE FUNCTION update_paper_corrected();
+
+```
+11. 

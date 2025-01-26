@@ -47,6 +47,7 @@ func main() {
 	app.Get("/api/FacultyGetApprove", handlers.GetFacultyRequestsHandler)
 	app.Get("/api/FacultyRecordsDisplay", handlers.GetAllFacultyRecordsHandler)
 	app.Post("/api/FacultyRequestSubmit", handlers.PostFacultyRequestHandler)
+	app.Post("/api/FacultyDailyUpdate", handlers.PostFacultyDailyUpdateHandler)
 	app.Post("/api/FacultyApproval", handlers.UpdateFacultyRequestHandler)
 	app.Post("/api/BoardApproval", handlers.PostFacultyBoardRequestHandler)
 	app.Post("/api/BceData", Adminhandlers.PostBceOptions)
