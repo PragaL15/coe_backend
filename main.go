@@ -7,8 +7,7 @@ import (
 	"syscall"
 
 	"github.com/PragaL15/coe_backend/config"
-	Adminhandlers "github.com/PragaL15/coe_backend/handlers/admin"
-	"github.com/PragaL15/coe_backend/handlers/fac_request"
+	routes "github.com/PragaL15/coe_backend/routers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -25,39 +24,15 @@ func main() {
 
 	app := fiber.New()
 	app.Use(logger.New())
-
-	// CORS Middleware
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",                // Allow all origins for simplicity
-		AllowMethods:     "GET,POST,PUT,DELETE",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-
+		AllowOrigins: "http://localhost:5173", 
+		AllowMethods: "GET,POST,PUT,DELETE",  
+		AllowCredentials: true,                   
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization", 
 	}))
 
-	// Routes
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
-	app.Get("/api/faculty", handlers.GetFacultyHandler)
-	app.Get("/api/courseOption", handlers.GetCoursesHandler)
-	app.Get("/api/deptOption", handlers.GetDepartmentsHandler)
-	app.Get("/api/semOption", handlers.GetSemestersHandler)
-	app.Get("/api/academicOption", handlers.GetAcademicYearOptions)
-	app.Get("/api/bceOption", handlers.GetBceOptions)
-	app.Get("/api/paperIDoption", handlers.GetPaperIDHandler)
-	app.Get("/api/FacultyGetApprove", handlers.GetFacultyRequestsHandler)
-	app.Get("/api/FacultyRecordsDisplay", handlers.GetAllFacultyRecordsHandler)
-	app.Post("/api/FacultyRequestSubmit", handlers.PostFacultyRequestHandler)
-	app.Post("/api/FacultyDailyUpdate", handlers.PostFacultyDailyUpdateHandler)
-	app.Post("/api/FacultyApproval", handlers.UpdateFacultyRequestHandler)
-	app.Post("/api/BoardApproval", handlers.PostFacultyBoardRequestHandler)
-	app.Post("/api/BceData", Adminhandlers.PostBceOptions)
-	app.Post("/api/CourseSend", Adminhandlers.PostCourseHandler)
-	app.Post("/api/FacultyData", Adminhandlers.PostFacultyHandler)
-	app.Post("/api/DeptData", Adminhandlers.PostDeptHandler)
-	app.Post("/api/SemesterData", Adminhandlers.PostSemesterHandler)
-	app.Post("/api/AcademicYearHandler", Adminhandlers.PostAcademicYearHandler)
- 
+	routes.SetupRoutes(app)
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
