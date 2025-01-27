@@ -10,7 +10,6 @@ import (
 	"github.com/PragaL15/coe_backend/config"
 )
 
-// FacultyRequest represents a record in the faculty_request table
 type FacultyGetRequest struct {
 	ID              int        `json:"id"`
 	FacultyID       int        `json:"faculty_id"`
@@ -22,8 +21,7 @@ type FacultyGetRequest struct {
 	UpdatedAt       time.Time  `json:"updated_at"`
 	DeadlineLeft    int        `json:"deadline_left"`
 	SemCode         string     `json:"sem_code"`
-	SemAcademicYear string     `json:"sem_academic_year"`
-	Reason          *string    `json:"reason"` // Pointer to handle nullable reason
+	Reason          *string    `json:"reason"` 
 }
 
 func GetFacultyRequestsHandler(c *fiber.Ctx) error {
@@ -32,7 +30,7 @@ func GetFacultyRequestsHandler(c *fiber.Ctx) error {
 		SELECT 
 			id, faculty_id, papers_left, course_id, remarks, 
 			approval_status, createdat, updatedat, deadline_left, 
-			sem_code, sem_academic_year, reason 
+			sem_code, reason 
 		FROM faculty_request`
 
 	rows, err := config.DB.Query(context.Background(), query)
@@ -57,7 +55,6 @@ func GetFacultyRequestsHandler(c *fiber.Ctx) error {
 			&request.UpdatedAt,
 			&request.DeadlineLeft,
 			&request.SemCode,
-			&request.SemAcademicYear,
 			&request.Reason,
 		); err != nil {
 			log.Printf("Error scanning row: %v", err)

@@ -19,7 +19,6 @@ type FacultyRequest struct {
 	Status             int    `json:"status"`
 	DeadlineLeft       int    `json:"deadline_left"`
 	SemCode            string `json:"sem_code"`
-	SemAcademicYear    string `json:"sem_academic_year"`
 	// Year               int    `json:"year"`
 }
 
@@ -76,10 +75,9 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 	query := `
     INSERT INTO faculty_request (
         faculty_id, papers_left, course_id, 
-        remarks, approval_status, status, deadline_left, sem_code, 
-        sem_academic_year
+        remarks, approval_status, status, deadline_left, sem_code
     ) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 	// Execute the database query with the provided parameters.
@@ -95,7 +93,6 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 		request.Status,
 		request.DeadlineLeft,
 		request.SemCode,
-		request.SemAcademicYear,
 		// request.Year,
 	)
 	if err != nil {
@@ -124,9 +121,7 @@ func validateFacultyRequest(req FacultyRequest) error {
 	if req.SemCode == "" {
 		return fiber.NewError(http.StatusBadRequest, "SemCode cannot be empty")
 	}
-	if req.SemAcademicYear == "" {
-		return fiber.NewError(http.StatusBadRequest, "SemAcademicYear cannot be empty")
-	}
+
 	// if req.Year <= 0 {
 	// 	return fiber.NewError(http.StatusBadRequest, "Year must be a positive integer")
 	// }
