@@ -50,7 +50,6 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 			"error": "Faculty ID does not exist",
 		})
 	}
-
 	var facultyName string
 	err = config.DB.QueryRow(
 		context.Background(),
@@ -65,7 +64,6 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Define the SQL query for inserting data into the faculty_request table.
 	query := `
     INSERT INTO faculty_request (
         faculty_id, papers_left, course_id, 
@@ -74,12 +72,10 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
-	// Execute the database query with the provided parameters.
 	_, err = config.DB.Exec(
 		context.Background(),
 		query,
 		request.FacultyID,
-		// request.TotalAllocatedPapers,
 		request.PapersLeft,
 		request.CourseID,
 		request.Remarks,
@@ -87,7 +83,6 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 		request.Status,
 		request.DeadlineLeft,
 		request.SemCode,
-		// request.Year,
 	)
 	if err != nil {
 		log.Printf("Error inserting faculty request: %v", err)
@@ -96,7 +91,6 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Respond with a success message.
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "Faculty request created successfully",
 	})
@@ -106,18 +100,11 @@ func validateFacultyRequest(req FacultyRequest) error {
 	if req.FacultyID <= 0 {
 		return fiber.NewError(http.StatusBadRequest, "FacultyID must be a positive integer")
 	}
-	// if req.TotalAllocatedPapers <= 0 {
-	// 	return fiber.NewError(http.StatusBadRequest, "TotalAllocatedPapers must be a positive integer")
-	// }
 	if req.CourseID <= 0 {
 		return fiber.NewError(http.StatusBadRequest, "CourseID must be a positive integer")
 	}
 	if req.SemCode == "" {
 		return fiber.NewError(http.StatusBadRequest, "SemCode cannot be empty")
 	}
-
-	// if req.Year <= 0 {
-	// 	return fiber.NewError(http.StatusBadRequest, "Year must be a positive integer")
-	// }
 	return nil
 }
