@@ -11,7 +11,6 @@ import (
 
 type FacultyRequest struct {
 	FacultyID          int    `json:"faculty_id"`
-	// TotalAllocatedPapers int  `json:"total_allocated_papers"`
 	PapersLeft         int    `json:"papers_left"`
 	CourseID           int    `json:"course_id"`
 	Remarks            string `json:"remarks"`
@@ -19,13 +18,11 @@ type FacultyRequest struct {
 	Status             int    `json:"status"`
 	DeadlineLeft       int    `json:"deadline_left"`
 	SemCode            string `json:"sem_code"`
-	// Year               int    `json:"year"`
 }
 
 func PostFacultyRequestHandler(c *fiber.Ctx) error {
 	var request FacultyRequest
 
-	// Parse the request body into the FacultyRequest struct.
 	if err := c.BodyParser(&request); err != nil {
 		log.Printf("Error parsing request body: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -33,7 +30,6 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate the required fields.
 	if err := validateFacultyRequest(request); err != nil {
 		log.Printf("Validation error: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -41,7 +37,6 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check if faculty_id exists in faculty_table
 	var exists bool
 	err := config.DB.QueryRow(
 		context.Background(),
@@ -56,7 +51,6 @@ func PostFacultyRequestHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Fetch the faculty name from faculty_table using faculty_id.
 	var facultyName string
 	err = config.DB.QueryRow(
 		context.Background(),

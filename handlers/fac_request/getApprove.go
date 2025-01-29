@@ -25,7 +25,6 @@ type FacultyGetRequest struct {
 }
 
 func GetFacultyRequestsHandler(c *fiber.Ctx) error {
-	// Query to fetch data
 	query := `
 		SELECT 
 			id, faculty_id, papers_left, course_id, remarks, 
