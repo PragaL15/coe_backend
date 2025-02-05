@@ -8,7 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/PragaL15/coe_backend/config"
 )
-
 type PriceCalculation struct {
 	ID             int     `json:"id"`
 	FacultyID      int     `json:"faculty_id"`
@@ -16,7 +15,6 @@ type PriceCalculation struct {
 	Price          float64 `json:"price"`
 	AmtGiven       float64 `json:"amt_given"`
 }
-
 func GetPriceCalculationsHandler(c *fiber.Ctx) error {
 	query := `
 		SELECT id, faculty_id, paper_corrected, price, amt_given 
