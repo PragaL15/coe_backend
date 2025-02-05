@@ -11,7 +11,6 @@ func SetupRoutes(app *fiber.App) {
 		return c.SendString("Hello, World!")
 	})
 
-	// Faculty Routes (assuming no middleware here)
 	facultyGroup := app.Group("/api")
 	facultyGroup.Get("/faculty", handlers.GetFacultyHandler)
 	facultyGroup.Get("/PriceFaculty", handlers.GetPriceCalculationsHandler)
@@ -28,7 +27,6 @@ func SetupRoutes(app *fiber.App) {
 	facultyGroup.Post("/FacultyApproval", handlers.UpdateFacultyRequestHandler)
 	facultyGroup.Post("/BoardApproval", handlers.PostFacultyBoardRequestHandler)
 
-	// Admin Routes (role_id 1) without middleware
 	adminGroup := app.Group("/api")
 	adminGroup.Post("/BceData", Adminhandlers.PostBceOptions)
 	adminGroup.Post("/CourseSend", Adminhandlers.PostCourseHandler)
