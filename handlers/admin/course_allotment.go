@@ -11,16 +11,15 @@ import (
 )
 
 type Course struct {
-	CourseCode string `json:"course_code"` // Required field
-	CourseName string `json:"course_name"` // Required field
+	CourseCode string `json:"course_code"` 
+	CourseName string `json:"course_name"` 
 	Status     int    `json:"status,omitempty"`
-	SemCode    string `json:"sem_code"` // Required field
+	SemCode    string `json:"sem_code"` 
 }
 
 func PostCourseHandler(c *fiber.Ctx) error {
 	var course Course
 
-	// Parse request body into the `Course` struct
 	if err := c.BodyParser(&course); err != nil {
 		log.Printf("Error parsing request body: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -28,19 +27,16 @@ func PostCourseHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Input validation
 	if course.CourseCode == "" || course.CourseName == "" || course.SemCode == "" {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "'course_code', 'course_name', and 'sem_code' are required fields.",
 		})
 	}
 
-	// Set default status if not provided
 	if course.Status == 0 {
 		course.Status = 1
 	}
 
-	// Check if the `sem_code` exists in `semester_table`
 	var exists bool
 	err := config.DB.QueryRow(
 		context.Background(),
@@ -60,23 +56,21 @@ func PostCourseHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Prepare the SQL query for inserting the course
 	query := `
 		INSERT INTO course_table (course_code, course_name, status, sem_code, createdat, updatedat)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 	now := time.Now()
 
-	// Execute the query
 	_, err = config.DB.Exec(
 		context.Background(),
 		query,
-		course.CourseCode,  // course_code
-		course.CourseName,  // course_name
-		course.Status,      // status
-		course.SemCode,     // sem_code
-		now,                // createdat
-		now,                // updatedat
+		course.CourseCode,  
+		course.CourseName, 
+		course.Status,     
+		course.SemCode,    
+		now,                
+		now,            
 	)
 	if err != nil {
 		log.Printf("Error inserting course record: %v", err)
@@ -85,7 +79,6 @@ func PostCourseHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Respond with success
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "Course record created successfully",
 	})

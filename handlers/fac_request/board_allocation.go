@@ -84,7 +84,6 @@ func PostFacultyBoardRequestHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Respond with a success message.
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "Faculty record created successfully",
 	})

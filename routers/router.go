@@ -14,6 +14,7 @@ func SetupRoutes(app *fiber.App) {
 	// Faculty Routes (assuming no middleware here)
 	facultyGroup := app.Group("/api")
 	facultyGroup.Get("/faculty", handlers.GetFacultyHandler)
+	facultyGroup.Get("/PriceFaculty", handlers.GetPriceCalculationsHandler)
 	facultyGroup.Get("/courseOption", handlers.GetCoursesHandler)
 	facultyGroup.Get("/deptOption", handlers.GetDepartmentsHandler)
 	facultyGroup.Get("/semOption", handlers.GetSemestersHandler)

@@ -28,26 +28,22 @@ func PostFacultyHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate required fields
 	if faculty.FacultyName == "" || faculty.Dept <= 0 || faculty.MobileNum == "" {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid input data. 'faculty_name', 'dept', and 'mobile_num' are required.",
 		})
 	}
 
-	// Validate mobile number length
 	if len(faculty.MobileNum) > 15 {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Mobile number exceeds the maximum length of 15 characters.",
 		})
 	}
 
-	// Default status to 1 if it's not provided
 	if faculty.Status == 0 {
 		faculty.Status = 1
 	}
 
-	// Insert the faculty record into the database
 	query := `
 		INSERT INTO faculty_table (faculty_name, dept, status, createdat, updatedat, mobile_num, email)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)

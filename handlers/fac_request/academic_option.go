@@ -13,7 +13,6 @@ type AcademicYear struct {
 	ID           int       `json:"id"`
 	AcademicYear string    `json:"academic_year"`
 }
-
 func GetAcademicYearOptions(c *fiber.Ctx) error {
 	query := `SELECT id, academic_year FROM academic_year_table`
 	rows, err := config.DB.Query(context.Background(), query)

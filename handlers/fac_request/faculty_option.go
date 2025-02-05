@@ -12,12 +12,12 @@ import (
 
 type Faculty struct {
 	FacultyID   int       `json:"faculty_id"`
-	FacultyName string    `json:"faculty_name"` // Non-pointer since faculty_name is NOT NULL
+	FacultyName string    `json:"faculty_name"` 
 	Dept        int       `json:"dept"`
 	Status      int       `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`   // Changed to time.Time to match the database type
-	UpdatedAt   time.Time `json:"updated_at"`   // Changed to time.Time to match the database type
-	MobileNum   string    `json:"mobile_num"`   // Non-pointer since mobile_num is NOT NULL
+	CreatedAt   time.Time `json:"created_at"`   
+	UpdatedAt   time.Time `json:"updated_at"`  
+	MobileNum   string    `json:"mobile_num"`   
 }
 
 func GetFacultyHandler(c *fiber.Ctx) error {

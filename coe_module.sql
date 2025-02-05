@@ -123,14 +123,11 @@ CREATE FUNCTION public.update_paper_corrected() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    -- Check if paper_corrected_today is greater than 0
-    IF NEW.paper_corrected_today > 0 THEN
-        -- Update the paper_corrected column in faculty_all_records
-        UPDATE faculty_all_records
-        SET paper_corrected = paper_corrected + NEW.paper_corrected_today
-        WHERE faculty_id = NEW.faculty_id AND paper_id = NEW.paper_id;
-    END IF;
-
+    NEW.paper_corrected := (
+        SELECT paper_corrected
+        FROM faculty_all_records
+        WHERE faculty_id = NEW.faculty_id
+    );
     RETURN NEW;
 END;
 $$;
@@ -410,10 +407,10 @@ CREATE TABLE public.faculty_request (
     updatedat timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     deadline_left integer,
     sem_code character varying(50),
-    sem_academic_year character varying(10) NOT NULL,
     reason text,
     paper_id integer,
-    bce_id integer
+    bce_id integer,
+    status integer
 );
 
 
@@ -492,6 +489,43 @@ ALTER SEQUENCE public.paper_id_table_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.paper_id_table_id_seq OWNED BY public.paper_id_table.id;
+
+
+--
+-- Name: price_calculation; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.price_calculation (
+    id integer NOT NULL,
+    faculty_id integer,
+    paper_corrected integer NOT NULL,
+    price double precision NOT NULL,
+    amt_given double precision GENERATED ALWAYS AS (((paper_corrected)::double precision * price)) STORED
+);
+
+
+ALTER TABLE public.price_calculation OWNER TO postgres;
+
+--
+-- Name: price_calculation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.price_calculation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.price_calculation_id_seq OWNER TO postgres;
+
+--
+-- Name: price_calculation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.price_calculation_id_seq OWNED BY public.price_calculation.id;
 
 
 --
@@ -612,6 +646,13 @@ ALTER TABLE ONLY public.paper_id_table ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
+-- Name: price_calculation id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.price_calculation ALTER COLUMN id SET DEFAULT nextval('public.price_calculation_id_seq'::regclass);
+
+
+--
 -- Name: semester_table id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -636,6 +677,9 @@ COPY public.academic_year_table (id, academic_year, created_at, updated_at, stat
 4	2025-2026	2025-01-25 10:39:08.616153	2025-01-25 10:39:08.616153	1
 5	2024-2026	2025-01-25 14:56:18.07813	2025-01-25 14:56:18.07813	1
 6	4012	2025-01-25 15:05:58.93459	2025-01-25 15:05:58.93459	1
+7	2026-2027	2025-01-29 01:45:34.502315	2025-01-29 01:45:34.502315	1
+8	2027-2028	2025-01-29 01:47:38.649076	2025-01-29 01:47:38.649076	1
+9	2027-2028	2025-01-29 01:50:24.721346	2025-01-29 01:50:24.721346	1
 \.
 
 
@@ -649,6 +693,7 @@ COPY public.bce_table (id, dept_id, bce_id, bce_name, status, createdat, updated
 8	101	BCE2025	Building Construction Engineering	t	2025-01-24 23:57:15.310151	2025-01-24 23:57:15.310151	\N	\N
 10	114	BCE12345	Board Chairman Example	t	2025-01-25 21:53:44.683118	2025-01-25 21:53:44.683118	9876543210	chairman@example.com
 11	101	RTYU67	Gomathi	f	2025-01-25 23:08:46.823429	2025-01-25 23:08:46.823429	6543765412	gomathi@bitsathy.a.ci
+12	117	BCE1234	Dr.Kalai	f	2025-01-29 01:49:07.851065	2025-01-29 01:49:07.851065	9876542319	kalai@bitsathy.ac.in
 \.
 
 
@@ -665,6 +710,8 @@ COPY public.course_table (course_id, course_code, course_name, status, createdat
 111	CS101	Introduction to Computer Science	1	2025-01-25 09:42:55.960342	2025-01-25 09:55:44.648187	SEM101
 112	MG001	Engineering math	1	2025-01-25 10:04:36.652196	2025-01-25 10:04:36.652196	SEM102
 113	CD102	Theory of computing	1	2025-01-25 13:49:06.250922	2025-01-25 13:49:06.250922	SEM202
+114	22CD108	Theory of computing	1	2025-01-29 01:45:18.905846	2025-01-29 01:45:18.905846	SEM101
+115	22CD123	Engineering Math III	1	2025-01-29 01:47:19.420218	2025-01-29 01:47:19.420218	SEM203
 \.
 
 
@@ -674,6 +721,16 @@ COPY public.course_table (course_id, course_code, course_name, status, createdat
 
 COPY public.daily_faculty_updates (update_id, faculty_id, paper_id, paper_corrected_today, remarks, createdat) FROM stdin;
 13	3	3	20	nil	2025-01-27 01:03:26.096519
+14	3	3	76	nil	2025-01-27 12:09:14.76131
+16	3	3	9	corrected 9 papers	2025-01-28 23:26:54.500485
+17	3	3	9	corrected 9 paper	2025-01-28 23:29:19.918627
+19	3	3	7	Corrected 7 papers today	2025-01-28 23:58:02.773683
+20	3	3	10	corrected 10 papers	2025-01-28 23:58:54.51595
+21	3	3	3	b	2025-01-29 00:05:13.76326
+22	3	3	6	complete correction of 6 papers	2025-01-29 00:08:12.795929
+23	3	3	23	corrected 23 papers	2025-01-29 00:19:45.147587
+24	3	3	9	Corrected 9 papers 	2025-01-29 00:23:49.322981
+25	3	3	3	corrected 3 papers 	2025-01-29 00:33:15.992706
 \.
 
 
@@ -689,12 +746,14 @@ COPY public.dept_table (id, dept_name, status, createdat, updatedat) FROM stdin;
 105	Department 105	1	2025-01-24 10:32:53.828519	2025-01-24 10:32:53.828519
 106	Department 106	1	2025-01-24 10:32:53.828519	2025-01-24 10:32:53.828519
 107	Department 107	1	2025-01-24 10:32:53.828519	2025-01-24 10:32:53.828519
-2	Computer Science	1	2025-01-25 00:24:56.217741	2025-01-25 00:24:56.217741
 112	Test Department	1	2025-01-25 20:53:01.585656	2025-01-25 20:53:01.585656
-0	csd	1	2025-01-25 21:05:52.689722	2025-01-25 21:05:52.689722
-113	Mechanical Engineering	1	2025-01-25 21:27:22.694323	2025-01-25 21:27:22.694323
-114	fd	1	2025-01-25 21:27:39.550096	2025-01-25 21:27:39.550096
-115	vfg	1	2025-01-25 22:36:13.052273	2025-01-25 22:36:13.052273
+2	Electronic and communication	1	2025-01-25 00:24:56.217741	2025-01-29 00:54:51.340272
+0	Computer Science and Design	1	2025-01-25 21:05:52.689722	2025-01-29 00:54:51.340272
+113	Information Technology	1	2025-01-25 21:27:22.694323	2025-01-29 00:54:51.340272
+114	Computer Technology	1	2025-01-25 21:27:39.550096	2025-01-29 00:54:51.340272
+115	Computer Science and Engineering	1	2025-01-25 22:36:13.052273	2025-01-29 00:54:51.340272
+116	Information Science Engineering	1	2025-01-28 11:38:04.757445	2025-01-29 00:54:51.340272
+117	Mechatronics	1	2025-01-29 01:48:12.408107	2025-01-29 01:48:12.408107
 \.
 
 
@@ -703,10 +762,9 @@ COPY public.dept_table (id, dept_name, status, createdat, updatedat) FROM stdin;
 --
 
 COPY public.faculty_all_records (faculty_id, course_id, paper_allocated, deadline, status, bce_id, sem_code, dept_id, paper_corrected, paper_id) FROM stdin;
-3	103	150	15	3	BCE125	CS103	12	50	3
-101	101	100	5	1	BCE123	CS101	10	20	1
-1	101	100	5	1	BCE123	CS101	10	20	1
-102	101	100	5	1	BCE123	CS101	10	20	1
+3	103	150	15	3	BCE125	CS103	12	112	3
+237	104	50	5	0	BCE1002	SEM201	113	\N	\N
+236	101	130	10	0	BCE1001	SEM201	2	9	\N
 \.
 
 
@@ -714,10 +772,9 @@ COPY public.faculty_all_records (faculty_id, course_id, paper_allocated, deadlin
 -- Data for Name: faculty_request; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.faculty_request (id, faculty_id, papers_left, course_id, remarks, approval_status, createdat, updatedat, deadline_left, sem_code, sem_academic_year, reason, paper_id, bce_id) FROM stdin;
-1	101	10	101	Approved and ready for next step	-1	2025-01-23 14:34:54.355981	2025-01-23 15:36:14.787646	7	Fall2024	2024-2025	oiug	\N	\N
-20	1	10	101	Remark about the request	1	2025-01-26 23:30:10.920982	2025-01-27 01:08:16.218677	5	SEM001	2025		1	\N
-2	102	15	102	Final review pending	-1	2025-01-23 14:34:54.355981	2025-01-27 01:31:24.97104	10	Spring2025	2024-2025	nil	\N	\N
+COPY public.faculty_request (id, faculty_id, papers_left, course_id, remarks, approval_status, createdat, updatedat, deadline_left, sem_code, reason, paper_id, bce_id, status) FROM stdin;
+36	3	38	103	Due to sudden illness	1	2025-01-29 00:33:45.749702	2025-01-29 09:01:09.947941	2	CS103		\N	\N	0
+37	3	38	103	The pending pages are uploaded	0	2025-01-29 11:04:27.875054	2025-01-29 11:04:27.875054	0	CS103	\N	\N	\N	0
 \.
 
 
@@ -726,7 +783,10 @@ COPY public.faculty_request (id, faculty_id, papers_left, course_id, remarks, ap
 --
 
 COPY public.faculty_table (faculty_id, faculty_name, dept, status, createdat, updatedat, mobile_num, email) FROM stdin;
-3	Alice Brown	103	1	2025-01-22 16:28:03.411904	2025-01-23 15:20:23.770292	9876543212	\N
+3	Dr.R.Gomathi	103	1	2025-01-22 16:28:03.411904	2025-01-29 00:07:02.095909	9876543212	\N
+236	Sasikala	113	1	2025-01-29 00:39:31.025066	2025-01-29 00:39:31.025066	9876543210	sasikala@example.com
+237	Sumathi	115	1	2025-01-29 00:39:31.025066	2025-01-29 00:39:31.025066	8765432109	sumathi@example.com
+238	Dr.Mohan	114	1	2025-01-29 01:49:46.055347	2025-01-29 01:49:46.055347	8765934123	mohan@bithsathy.ac.in
 \.
 
 
@@ -738,6 +798,16 @@ COPY public.paper_id_table (id, paper_id) FROM stdin;
 1	it104
 2	it105
 3	it106
+\.
+
+
+--
+-- Data for Name: price_calculation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.price_calculation (id, faculty_id, paper_corrected, price) FROM stdin;
+1	3	112	10.5
+2	3	112	10.5
 \.
 
 
@@ -754,6 +824,8 @@ COPY public.semester_table (id, sem_code, sem_academic_year, status, createdat, 
 7	SEM222	2024-2025	1	2025-01-25 15:41:50.322458	2025-01-25 15:41:50.322458
 9	SEM322	2024-2025	1	2025-01-25 16:02:49.603156	2025-01-25 16:02:49.603156
 10	SEM203	2024-2026	1	2025-01-25 16:07:32.259186	2025-01-25 16:07:32.259186
+11	CS103	2024-2025	1	2025-01-28 22:59:18.975756	2025-01-28 22:59:18.975756
+13	SEM345	2027-2028	1	2025-01-29 01:47:55.68267	2025-01-29 01:47:55.68267
 \.
 
 
@@ -763,8 +835,8 @@ COPY public.semester_table (id, sem_code, sem_academic_year, status, createdat, 
 
 COPY public.user_table (user_id, user_name, password, role_id, status) FROM stdin;
 1	john_doe	password123	1	t
-2	jane_smith	password456	2	t
-3	alex_jones	password789	3	f
+3	alex_jones	$2b$12$IjPbYCrSviYhh/Mt3lT/vOP59J4wmoUkkhbmoN6AjH1L4o.SbyXb6\n	3	t
+2	jane_smith	$2b$12$g/HWz/ojD5t1R93hA.b9YuXPNU8allfnZdaEGFfnJpbDIO8f/tCFG	2	t
 \.
 
 
@@ -772,49 +844,49 @@ COPY public.user_table (user_id, user_name, password, role_id, status) FROM stdi
 -- Name: academic_year_table_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.academic_year_table_id_seq', 6, true);
+SELECT pg_catalog.setval('public.academic_year_table_id_seq', 9, true);
 
 
 --
 -- Name: bce_table_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bce_table_id_seq', 11, true);
+SELECT pg_catalog.setval('public.bce_table_id_seq', 12, true);
 
 
 --
 -- Name: course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.course_id_seq', 113, true);
+SELECT pg_catalog.setval('public.course_id_seq', 115, true);
 
 
 --
 -- Name: daily_faculty_updates_update_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.daily_faculty_updates_update_id_seq', 13, true);
+SELECT pg_catalog.setval('public.daily_faculty_updates_update_id_seq', 25, true);
 
 
 --
 -- Name: dept_table_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.dept_table_id_seq', 115, true);
+SELECT pg_catalog.setval('public.dept_table_id_seq', 117, true);
 
 
 --
 -- Name: faculty_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.faculty_id_seq', 235, true);
+SELECT pg_catalog.setval('public.faculty_id_seq', 238, true);
 
 
 --
 -- Name: faculty_request_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.faculty_request_id_seq', 20, true);
+SELECT pg_catalog.setval('public.faculty_request_id_seq', 37, true);
 
 
 --
@@ -825,10 +897,17 @@ SELECT pg_catalog.setval('public.paper_id_table_id_seq', 3, true);
 
 
 --
+-- Name: price_calculation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.price_calculation_id_seq', 2, true);
+
+
+--
 -- Name: semester_table_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.semester_table_id_seq', 10, true);
+SELECT pg_catalog.setval('public.semester_table_id_seq', 14, true);
 
 
 --
@@ -895,6 +974,14 @@ ALTER TABLE ONLY public.paper_id_table
 
 
 --
+-- Name: price_calculation price_calculation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.price_calculation
+    ADD CONSTRAINT price_calculation_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: semester_table semester_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -932,6 +1019,14 @@ ALTER TABLE ONLY public.dept_table
 
 ALTER TABLE ONLY public.faculty_all_records
     ADD CONSTRAINT unique_faculty_paper UNIQUE (faculty_id, paper_id);
+
+
+--
+-- Name: user_table unique_role_id; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_table
+    ADD CONSTRAINT unique_role_id UNIQUE (role_id);
 
 
 --
@@ -976,6 +1071,13 @@ CREATE TRIGGER set_created_at_updated_at_course BEFORE INSERT OR UPDATE ON publi
 --
 
 CREATE TRIGGER set_created_at_updated_at_course BEFORE INSERT OR UPDATE ON public.semester_table FOR EACH ROW EXECUTE FUNCTION public.set_created_at_updated_at();
+
+
+--
+-- Name: price_calculation set_paper_corrected; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER set_paper_corrected BEFORE INSERT ON public.price_calculation FOR EACH ROW EXECUTE FUNCTION public.update_paper_corrected();
 
 
 --
@@ -1061,6 +1163,22 @@ ALTER TABLE ONLY public.bce_table
 
 ALTER TABLE ONLY public.course_table
     ADD CONSTRAINT fk_sem_code FOREIGN KEY (sem_code) REFERENCES public.semester_table(sem_code) ON DELETE CASCADE;
+
+
+--
+-- Name: faculty_request fk_sem_code; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.faculty_request
+    ADD CONSTRAINT fk_sem_code FOREIGN KEY (sem_code) REFERENCES public.semester_table(sem_code) ON DELETE SET NULL;
+
+
+--
+-- Name: price_calculation price_calculation_faculty_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.price_calculation
+    ADD CONSTRAINT price_calculation_faculty_id_fkey FOREIGN KEY (faculty_id) REFERENCES public.faculty_all_records(faculty_id) ON DELETE CASCADE;
 
 
 --
