@@ -12,8 +12,8 @@ import (
 )
 
 type LoginRequest struct {
-	Username string `json:"user_name"` // Username field in the request body
-	Password string `json:"password"`   // Password field in the request body
+	Username string `json:"user_name"` 
+	Password string `json:"password"`   
 }
 
 type LoginResponse struct {
@@ -24,7 +24,6 @@ type LoginResponse struct {
 
 func LoginHandler(c *fiber.Ctx) error {
 	var req LoginRequest
-	// Parse the request body into the LoginRequest struct
 	if err := c.BodyParser(&req); err != nil {
 		log.Printf("Error parsing request body: %v", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
@@ -37,7 +36,6 @@ func LoginHandler(c *fiber.Ctx) error {
 		hashedPW string
 	)
 
-	// Query the database for the user with the given username
 	query := `SELECT user_id, role_id, password, status FROM user_table WHERE user_name = $1`
 	err := config.DB.QueryRow(c.Context(), query, req.Username).Scan(&userID, &roleID, &hashedPW, &status)
 	if err != nil {
@@ -49,7 +47,6 @@ func LoginHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
 	}
 
-	// Check if the account is active (status should be true)
 	if !status {
 		log.Println("Account is inactive")
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Account is inactive"})
